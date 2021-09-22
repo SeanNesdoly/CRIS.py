@@ -28,18 +28,46 @@ from itertools import izip
 # Link to license: https://github.com/patrickc01/CRIS.py/blob/master/LICENSE
 
 def get_parameters():
-    ID = 'Locus_1'
-    ref_seq = str.upper('agggaatgccccggagggcggagaactgggacgaggccgaggtaggcgcggaggaggcaggcgtcgaagagtacggccctgaagaagacggcggggaggagtcgggcgccgaggagtccggcccggaagagtccggcccggaggaactgggcgccgaggaggagatgg')
-    seq_start = str.upper('GCGGAGAACTG')
-    seq_end = str.upper('GCCGAGGAGGA')
-    fastq_files = '*.fastq'
     # Note to user: change text inside of quote marks ('YOUR DNA SEQUENCES GO
     # HERE') for your experiment. Case of text does not matter.
+    genes = ['DDX6', 'SMG9', 'CARM1', 'NXF1', 'NXT1']
+    ID = genes[0] # name of output directory
+
+    if (ID == genes[0]):
+        ref_seq   = 'TCATTAAGCAGCTCAGGACTGTAATATTATAAACCTTTATCCTCTTTGCTCAAATTAAAATTAATGAGAATGTATGTTTTCTAAATCTTGCATAGTGCACGTGGTGATTGCTACCCCTGGGAGAATCCTGGATCTTATTAAGAAAGGAGTAGCAAAGGTTGATCATGTCCAGATGATAGTATTGGATGAGGTAATGTCTCTTCATTTGGCATTATACTGTTCTGTACTTTTCTGTGCTTTGCTTATAACTGCCAGTGAATGAAGCAAAAGCTGCTTGTGTTTATGATCTAATAAACACATAAACAATCAGTTTAAATTAATTTGCTTATAAAATGTGTTTTACCCGTCAGAGGG'
+        seq_start = 'CATTAAGCAGCTCAG'
+        seq_end   = 'ATGAGGTAATGTCTC'
+    elif (ID == genes[1]):
+        ref_seq   = 'CAGCTCACAGGGTCACACTTCGGATGCATCCAAGGCTGAGAACCAGAGCTCTCACACACCCCTGCCTGCTCCTCTCCACAGGACTTATGTTTTCCGGGCCCAGAGCGCTGAAATGAAGGAACGAGGGGGCAACCAGACCAGTGGCATCGACTTCTTTATTACCCAAGAACGGATTGTTTTCCTGGACACACAGGTGCCAGCCCCGCCTGCCTTTGCCCCACCCTGCCACATCCTGCATTGAGCCTCTTCCTGGAATGTGATTAAGCCAGAACCCTGCGTGGATTCCATGTGCTTCCAGTCAAGCCAT'
+        seq_start = 'AGCTCACAGGGTCAC'
+        seq_end   = 'ACACACAGGTGCCAG'
+    elif (ID == genes[2]):
+        ref_seq   = 'AGGAGTGCAGGAACGAATGGATGACAGGCTGGGAGCACCCAGGGTTGGGGGTCTTGGGGTCCTTTGGAAGCTCTGCCAGGCAGTGTGGGATGTGTCACCTGACGCCAGCACCCCTCCCTGCCCCACTCCCAGGAAACATGTTTCCTACCATTGGTGACGTCCACCTTGCACCCTTCACGGATGAACAGCTCTACATGGAGCAGTTCACCAAGGCCAACTTCTGGTGAGTGTGCCCTGGGTGTCCCGCCTGGGCCCCACAGCCTGCCTTCTCAGGGACAGCCCCAGCTCCCCAGAGAGCCTGCACTCCTCTTTTTCTGAAAGACTTGGGCTAGATGAGGGC'
+        seq_start = 'GGAGTGCAGGAACGA'
+        seq_end   = 'CCAAGGCCAACTTCT'
+    elif (ID == genes[3]):
+        ref_seq   = 'TACTCGGCTAAGCTGCTTCTGGGGGAATAAAAGGAATGGACGTGGTGTTCAGAGCAGTGCTGCCAGCAGGTGTGCCCTGTATCTGCTGGGAAACCCAGTGGTCCCGGGCAGATTCTGGGATGTGATACTAACCGGGCAGGGTTCTGAGGAATGAAAGGAATGCTCAGGGAACAGCAGGCCCCATCATGGTAGGCATCCAGGAGCCCTTGTCGGTCTCCAGAGTCGTAAATTGCATAGTACCTATGGGAAAAACAAAAAAGAAAGTATGGGCTCTGTGGTCTACAGCCATACAAGGACCCAGTAGCTCCCA'
+        seq_start = 'GGGAGCTACTGGGTC'
+        seq_end   = 'TCACATCCCAGAATC'
+    elif (ID == genes[4]):
+        ref_seq   = 'TGTTCCATTGTCAGGGCAGAATGAACTTTGGCATTCACGTGGCTTCTCTTCAACCTTACTTCCCTGCAGCCCCTGGTTCCCCAAGGCAGAGGAAATACCCTGGTGGAGCCCTCCTTCCATAGAACCAGAGATGGCATCTGTGGATTTCAAGACCTATGTGGATCAGGCCTGCAGAGCTGCTGAGGAGTTTGTCAATGTCTACTACACCACCATGGATAAGCGGCGGCGTTTGCTGTCCCGCCTGTACATGGGCACAGCCACCCTGGTCTGGAATGGCAATGCTGTTTCAGGACAAGAATCCTTGAGTGAGTTTTTTGAAATGTTGCCTTCCAGCGAGTTCCAAATCAGCGTGGTAGACTGCCAGCCTGTTCATGATGAAGCCACACCAAGCCAGACCACGGTCCTTGTTGTCATCTGTGGATCAGTGAAGTTTGAGGGGAACAAACAACGGGACTTCAACCAGAACT'
+        seq_start = 'GTTCCATTGTCAGGG'
+        seq_end   = 'CTGGTCTGGAATGGC'
+
     test_list = [
-               str('g10'),   str.upper('GAGGCAGGCGTCGAAGAGTACGG'),
-               str('g14'),   str.upper('CGGCCCTGAAGAAGACGGCGGGG'),
-               str('g6'),   str.upper('CCGAGGAGTCCGGCCCGGAAGAG'),
-                ]
+        str('DDX6'), str.upper('ACGTGGTGATTGCTACCCCT'),
+        str('SMG9'), str.upper('GCTGAAATGAAGGAACGAGG'),
+        str('CARM1'), str.upper('TTCACGGATGAACAGCTCTA'),
+        str('NXF1'), str.upper('TTGTCGGTCTCCAGAGTCGT'),
+        str('NXT1'), str.upper('ACTACACCACCATGGATAAG')
+    ]
+
+    # Choose R1 or R2 reads for analysis based on target gene (ID)
+    if (ID == 'NXF1'):
+        fastq_files = '*R2*.fastq.trimmed' # use reverse reads
+    else:
+        # Use forward reads for genes 'DDX6', 'SMG9', 'CARM1', & 'NXT1'
+        fastq_files = '*R1*.fastq.trimmed'
 
     # Command-line argument parsing, added by ariva@ufl.edu
     cmdline_fastqs = []
@@ -71,7 +99,10 @@ def get_parameters():
     if cmdline_fastqs:
         fastq_files = cmdline_fastqs
     else:
-        fastq_files = glob.glob(fastq_files)
+        data_dir = os.getenv("HOME") \
+            + '/scratch/210721_MultiKO_CellLineSeqValidation/out/trimmed_reads/06_m50bp/rcFullSeq_rc19bpSuffix_SamplesRemoved/'
+        fastq_files = glob.glob(data_dir + fastq_files)
+
     # End additions
     print "Input files:"
     for f in fastq_files:
@@ -188,10 +219,16 @@ def search_fastq(ID,ref_seq,seq_start,seq_end,fastq_files,test_list):
 
     for x,y in pairwise(test_list):          #Create an ordered dictionary of items in test_list
         test_dict[x] = y
-    save_dir = os.getcwd()+"/"+ str(ID) + "/"
-    print "Working directory: {}".format(str(os.getcwd()))#save_dir
+
+    save_dir = os.getenv("HOME") \
+        + '/scratch/210721_MultiKO_CellLineSeqValidation/out/crispy/' \
+        + str(ID) \
+        + '/'
     make_project_directory(save_dir)
-    file_name = save_dir+'results_counter ' + ID + '.txt'
+    print "Working directory: {}".format(str(os.getcwd()))
+    print "Output directory: {}".format(save_dir)
+
+    file_name = save_dir + 'results_counter_' + ID + '.txt'
     with open(file_name, "w") as f:
         wt_distance = ref_seq.find(seq_end)+len(seq_end) - ref_seq.find(seq_start)      #Expected size of WT read, the distance between the two anchor points made from seq_start and seq_end
         f.write(ID + '\n')
