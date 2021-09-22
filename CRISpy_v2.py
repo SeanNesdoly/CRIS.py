@@ -11,9 +11,10 @@ import pandas as pd
 from itertools import izip
 
 
-#CRIS.py
+# CRIS.py
+# @SeanNesdoly: Version 2 (CRISpy_v2.py) targets Python 2.7
 
-#Modify parameters below in the get_parameters() section.
+# Modify parameters below in the get_parameters() section.
 
 # [2021-09-09] @SeanNesdoly
 # Forked from GitHub repo: https://github.com/patrickc01/CRIS.py
@@ -27,12 +28,13 @@ from itertools import izip
 # Link to license: https://github.com/patrickc01/CRIS.py/blob/master/LICENSE
 
 def get_parameters():
-    #Note to user- Change text inside of quote marks ('YOUR DNA SEQUENCES GO HERE') for your experiment.  Case of text does not matter.
     ID = 'Locus_1'
     ref_seq = str.upper('agggaatgccccggagggcggagaactgggacgaggccgaggtaggcgcggaggaggcaggcgtcgaagagtacggccctgaagaagacggcggggaggagtcgggcgccgaggagtccggcccggaagagtccggcccggaggaactgggcgccgaggaggagatgg')
     seq_start = str.upper('GCGGAGAACTG')
     seq_end = str.upper('GCCGAGGAGGA')
     fastq_files = '*.fastq'
+    # Note to user: change text inside of quote marks ('YOUR DNA SEQUENCES GO
+    # HERE') for your experiment. Case of text does not matter.
     test_list = [
                str('g10'),   str.upper('GAGGCAGGCGTCGAAGAGTACGG'),
                str('g14'),   str.upper('CGGCCCTGAAGAAGACGGCGGGG'),
@@ -65,6 +67,7 @@ def get_parameters():
             prev = a
         else:
             cmdline_fastqs.append(a)
+
     if cmdline_fastqs:
         fastq_files = cmdline_fastqs
     else:
@@ -117,7 +120,9 @@ def make_project_directory(save_dir):
         os.mkdir(save_dir)
 
 def write_to_file(record_entry,f):
-    #Writes results to the results_counter.txt file.  Method of inserting space between each well to make the .txt file easier to read.  Based on # of items in well list
+    #Writes results to the results_counter.txt file. Method of inserting space
+    #between each well to make the .txt file easier to read. Based on # of
+    #items in well list
     f.write("\n")
     for record in record_entry:         #record entry is a giant list (master_Record) that contains well-lists as elements
         for line in record:
@@ -133,16 +138,19 @@ def write_to_file(record_entry,f):
 def make_counter(indel_size_list, current_fastq_file, dict_Counters, c_Counter, SNP_test, raw_wt_counter):
     top_common = 12             #Number of top found reads to write to results_counter .txt file
     temp_counter = Counter(indel_size_list).most_common(top_common)    #Count top indels present in fastq file
-    temp_dict =OrderedDict()
-    #If there are not a total of at least 'top_common' common reads from the summary file, fill the spaces with NA, NA
+    temp_dict = OrderedDict()
+
+    #If there are not a total of at least 'top_common' common reads from the
+    #summary file, fill the spaces with NA, NA
     if len(Counter(indel_size_list).most_common(top_common)) <top_common:
-            for i in range (0,top_common - len(Counter(indel_size_list).most_common(top_common))):
-                temp_counter.append(("NA","NA"))
-            else:
-                pass
+        for i in range (0,top_common - len(Counter(indel_size_list).most_common(top_common))):
+            temp_counter.append(("NA","NA"))
+    else:
+        pass
+
     temp_dict['Name']=str(current_fastq_file)              #Fill in Name column of CSV file with the file fastq name
     temp_dict['Sample']=''                                 #Makes a blank column for user to fill in sample names
-    counter =1
+    counter = 1
 
     for k in dict_Counters:
         try:
@@ -172,7 +180,6 @@ def search_fastq(ID,ref_seq,seq_start,seq_end,fastq_files,test_list):
     test_dict=OrderedDict()                  #Name, Sequence of each item that is being searched for
     dict_Counters = OrderedDict()            #Name, Count of each item in the dictionary being searched for (ie current_fastq_file)
     master_distance_and_count_summary =[]
-    save_dir = os.getcwd()+"/"+ str(ID) + "/"
     fastq_counter = 0               #Count the number of fastq_files with reads
     master_Record = []             #Master list, Master list contains lists
     indel_size_list = []             #list of indel sizes found in the fastq.  For each read, one indel size is recorded
@@ -199,7 +206,6 @@ def search_fastq(ID,ref_seq,seq_start,seq_end,fastq_files,test_list):
         print 'Expected WT distance: {}'.format(wt_distance)     #The expected distance between  seq_start and seq_end if the DNA is WT/ REF
         if wt_distance < 0:
             f.write("\n\n WARNING: THIS IS NOT GOING TO GIVE YOU THE FULL DATA. YOUR EXPECTED WT DISTANCE IS LESS THAN 0, it is: {}\n  Check your seq_start and seq_end again\n".format(wt_distance))
-
         else:
             pass
 
