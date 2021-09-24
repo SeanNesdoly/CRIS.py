@@ -27,29 +27,31 @@ from itertools import izip
 # patrickc01/CRIS.py is licensed under the 'GNU General Public License v3.0'.
 # Link to license: https://github.com/patrickc01/CRIS.py/blob/master/LICENSE
 
-def get_parameters():
+def get_parameters(target_gene):
     # Note to user: change text inside of quote marks ('YOUR DNA SEQUENCES GO
     # HERE') for your experiment. Case of text does not matter.
-    genes = ['DDX6', 'SMG9', 'CARM1', 'NXF1', 'NXT1']
-    ID = genes[0] # name of output directory
 
-    if (ID == genes[0]):
+    # Name of output directory (see 'save_dir'); used for calculating
+    # sgRNA-specifc 'raw_wt_counter' values
+    ID = target_gene
+
+    if (ID == 'DDX6'):
         ref_seq   = 'TCATTAAGCAGCTCAGGACTGTAATATTATAAACCTTTATCCTCTTTGCTCAAATTAAAATTAATGAGAATGTATGTTTTCTAAATCTTGCATAGTGCACGTGGTGATTGCTACCCCTGGGAGAATCCTGGATCTTATTAAGAAAGGAGTAGCAAAGGTTGATCATGTCCAGATGATAGTATTGGATGAGGTAATGTCTCTTCATTTGGCATTATACTGTTCTGTACTTTTCTGTGCTTTGCTTATAACTGCCAGTGAATGAAGCAAAAGCTGCTTGTGTTTATGATCTAATAAACACATAAACAATCAGTTTAAATTAATTTGCTTATAAAATGTGTTTTACCCGTCAGAGGG'
         seq_start = 'CATTAAGCAGCTCAG'
         seq_end   = 'ATGAGGTAATGTCTC'
-    elif (ID == genes[1]):
+    elif (ID == 'SMG9'):
         ref_seq   = 'CAGCTCACAGGGTCACACTTCGGATGCATCCAAGGCTGAGAACCAGAGCTCTCACACACCCCTGCCTGCTCCTCTCCACAGGACTTATGTTTTCCGGGCCCAGAGCGCTGAAATGAAGGAACGAGGGGGCAACCAGACCAGTGGCATCGACTTCTTTATTACCCAAGAACGGATTGTTTTCCTGGACACACAGGTGCCAGCCCCGCCTGCCTTTGCCCCACCCTGCCACATCCTGCATTGAGCCTCTTCCTGGAATGTGATTAAGCCAGAACCCTGCGTGGATTCCATGTGCTTCCAGTCAAGCCAT'
         seq_start = 'AGCTCACAGGGTCAC'
         seq_end   = 'ACACACAGGTGCCAG'
-    elif (ID == genes[2]):
+    elif (ID == 'CARM1'):
         ref_seq   = 'AGGAGTGCAGGAACGAATGGATGACAGGCTGGGAGCACCCAGGGTTGGGGGTCTTGGGGTCCTTTGGAAGCTCTGCCAGGCAGTGTGGGATGTGTCACCTGACGCCAGCACCCCTCCCTGCCCCACTCCCAGGAAACATGTTTCCTACCATTGGTGACGTCCACCTTGCACCCTTCACGGATGAACAGCTCTACATGGAGCAGTTCACCAAGGCCAACTTCTGGTGAGTGTGCCCTGGGTGTCCCGCCTGGGCCCCACAGCCTGCCTTCTCAGGGACAGCCCCAGCTCCCCAGAGAGCCTGCACTCCTCTTTTTCTGAAAGACTTGGGCTAGATGAGGGC'
         seq_start = 'GGAGTGCAGGAACGA'
         seq_end   = 'CCAAGGCCAACTTCT'
-    elif (ID == genes[3]):
+    elif (ID == 'NXF1'):
         ref_seq   = 'TACTCGGCTAAGCTGCTTCTGGGGGAATAAAAGGAATGGACGTGGTGTTCAGAGCAGTGCTGCCAGCAGGTGTGCCCTGTATCTGCTGGGAAACCCAGTGGTCCCGGGCAGATTCTGGGATGTGATACTAACCGGGCAGGGTTCTGAGGAATGAAAGGAATGCTCAGGGAACAGCAGGCCCCATCATGGTAGGCATCCAGGAGCCCTTGTCGGTCTCCAGAGTCGTAAATTGCATAGTACCTATGGGAAAAACAAAAAAGAAAGTATGGGCTCTGTGGTCTACAGCCATACAAGGACCCAGTAGCTCCCA'
         seq_start = 'GGGAGCTACTGGGTC'
         seq_end   = 'TCACATCCCAGAATC'
-    elif (ID == genes[4]):
+    elif (ID == 'NXT1'):
         ref_seq   = 'TGTTCCATTGTCAGGGCAGAATGAACTTTGGCATTCACGTGGCTTCTCTTCAACCTTACTTCCCTGCAGCCCCTGGTTCCCCAAGGCAGAGGAAATACCCTGGTGGAGCCCTCCTTCCATAGAACCAGAGATGGCATCTGTGGATTTCAAGACCTATGTGGATCAGGCCTGCAGAGCTGCTGAGGAGTTTGTCAATGTCTACTACACCACCATGGATAAGCGGCGGCGTTTGCTGTCCCGCCTGTACATGGGCACAGCCACCCTGGTCTGGAATGGCAATGCTGTTTCAGGACAAGAATCCTTGAGTGAGTTTTTTGAAATGTTGCCTTCCAGCGAGTTCCAAATCAGCGTGGTAGACTGCCAGCCTGTTCATGATGAAGCCACACCAAGCCAGACCACGGTCCTTGTTGTCATCTGTGGATCAGTGAAGTTTGAGGGGAACAAACAACGGGACTTCAACCAGAACT'
         seq_start = 'GTTCCATTGTCAGGG'
         seq_end   = 'CTGGTCTGGAATGGC'
@@ -261,8 +263,17 @@ def search_fastq(ID,ref_seq,seq_start,seq_end,fastq_files,test_list):
 
             with open(str(each_fastq_file), "r") as current_fastq_file:
                 for line in current_fastq_file:   #For each line in the fastq file
-                    if test_dict.items()[0][1] in line:           #Counts the number of times the first item in test_dict is found in ANY of the lines of the fastq file.  This is a check in case SNPs are in BOTH seq_start and seq_end
-                        raw_wt_counter+=1
+                    #Counts the number of times the first item in test_dict
+                    #is found in ANY of the lines of the fastq file. This
+                    #is a check in case SNPs are in BOTH seq_start and
+                    #seq_end
+
+                    # @SeanNesdoly: use the sequence of the sgRNA currently
+                    # under analysis, instead of arbitrarily using the
+                    # first one in 'test_dict'. This will give more accurate
+                    # sgRNA-specific counts.
+                    if test_dict[ID] in line:
+                        raw_wt_counter += 1
                     if line.find(seq_start)>0 and line.find(seq_end)>0:
                         c_Counter += 1
                         start_counter +=1     #Count # of times seq_start is found
@@ -290,7 +301,8 @@ def search_fastq(ID,ref_seq,seq_start,seq_end,fastq_files,test_list):
             except ZeroDivisionError:
                 pass
             try:
-                raw_wt_counter = str(str(raw_wt_counter) +  ' ('+ format((raw_wt_counter/ dict_Counters[test_dict.items()[0][0]]), '.1f') +')') #Calculate raw_wt_counter
+                #Calculate raw_wt_counter
+                raw_wt_counter = str(str(raw_wt_counter) +  ' ('+ format((raw_wt_counter/ dict_Counters[ID]), '.1f') +')')
             except ZeroDivisionError:
                 pass
 
@@ -347,9 +359,16 @@ def main():
     seq_end = ''
     fastq_files = ''
     test_list = []
-    print("CRIS.py \nMain program")
-    ID, ref_seq, seq_start, seq_end, fastq_files, test_list = get_parameters()
-    search_fastq(ID, ref_seq, seq_start, seq_end, fastq_files, test_list)
+
+    print("CRISpy_v2.py \nModified by @SeanNesdoly\nMain program")
+
+    # @SeanNesdoly: Run CRISpy analysis on each target sgRNA/gene in turn.
+    genes = ['DDX6', 'SMG9', 'CARM1', 'NXF1', 'NXT1']
+    for g in genes:
+        ID, ref_seq, seq_start, seq_end, fastq_files, test_list = get_parameters(g)
+        search_fastq(ID, ref_seq, seq_start, seq_end, fastq_files, test_list)
+        print("Completed CRISpy analysis for: " + g)
+
     print("Done")
 
 if __name__== "__main__":
