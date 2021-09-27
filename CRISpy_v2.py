@@ -8,11 +8,12 @@ import csv
 from collections import Counter
 from collections import OrderedDict
 import pandas as pd
-from itertools import izip
 
 
 # CRIS.py
-# @SeanNesdoly: Version 2 (CRISpy_v2.py) targets Python 2.7
+#
+# @SeanNesdoly: Version 2 (CRISpy_v2.py) targets Python 2.7; I modified this
+# script to work with Python 3 (based on CRISpy_v1-py3.py).
 
 # Modify parameters below in the get_parameters() section.
 
@@ -106,9 +107,9 @@ def get_parameters(target_gene):
         fastq_files = glob.glob(data_dir + fastq_files)
 
     # End additions
-    print "Input files:"
+    print("Input files:")
     for f in fastq_files:
-        print "  " + f
+        print("  " + f)
     return ID, ref_seq, seq_start, seq_end, fastq_files, test_list
 
 # Added by ariva@ufl.edu
@@ -141,7 +142,7 @@ def pairwise(iterable):
     #Make an ordered dictionary from items in in test list
     "s -> (s0, s1), (s2, s3), (s4, s5), ..."
     a = iter(iterable)
-    return izip(a, a)
+    return zip(a, a) # @SeanNesdoly: izip from itertools is zip in Python 3
 
 
 def make_project_directory(save_dir):
@@ -228,8 +229,8 @@ def search_fastq(ID, ref_seq, seq_start, seq_end, fastq_files, test_list):
         + str(ID) \
         + '/'
     make_project_directory(save_dir)
-    print "Working directory: {}".format(str(os.getcwd()))
-    print "Output directory: {}".format(save_dir)
+    print("Working directory: {}".format(str(os.getcwd())))
+    print("Output directory: {}".format(save_dir))
 
     file_name = save_dir + 'results_counter_' + ID + '.txt'
     with open(file_name, "w") as f:
@@ -238,18 +239,18 @@ def search_fastq(ID, ref_seq, seq_start, seq_end, fastq_files, test_list):
         f.write(str("seq_start: "+seq_start+'\n'))
         f.write(str("seq_end: "+seq_end+'\n'))
         f.write("Test_Sequences (from 'test_list'): \n")
-        for key, value in test_dict.iteritems():                #Go through the test_dict and write each item that is being searched for
+        for key, value in test_dict.items():                #Go through the test_dict and write each item that is being searched for
             f.write(str(key)+": "+value+'\n')
-            print key, value
+            print(key, value)
             dict_Counters[str(key)]=0
 
-        print 'Expected WT distance: {}'.format(wt_distance)     #The expected distance between  seq_start and seq_end if the DNA is WT/ REF
+        print('Expected WT distance: {}'.format(wt_distance))     #The expected distance between  seq_start and seq_end if the DNA is WT/ REF
         if wt_distance < 0:
             f.write("\n\n WARNING: THIS IS NOT GOING TO GIVE YOU THE FULL DATA. YOUR EXPECTED WT DISTANCE IS LESS THAN 0, it is: {}\n  Check your seq_start and seq_end again\n".format(wt_distance))
         else:
             pass
 
-        print "Program Running"
+        print("Program Running")
 
         for each_fastq_file in fastq_files:   #For each clone (really each fastq file in directory), open the file as "clone"
             c_Counter = 0                     #Reset control counter to 0, this counter counts how many times both seq_start and seq_end are found in a line.
@@ -313,7 +314,7 @@ def search_fastq(ID, ref_seq, seq_start, seq_end, fastq_files, test_list):
             if c_Counter == 0:
                 pass
             elif c_Counter > 10:  #if more than 10 control read counts, record data
-                print"{}: Total_reads:{}, {}".format(fastq_name, str(c_Counter).ljust(2), dict_Counters.items())
+                print("{}: Total_reads:{}, {}".format(fastq_name, str(c_Counter).ljust(2), dict_Counters.items()))
                 fastq_counter += 1
 
                 test_list_string=str(" Testing: ")
@@ -337,9 +338,9 @@ def search_fastq(ID, ref_seq, seq_start, seq_end, fastq_files, test_list):
             else: # c_Counter > 0 && c_Counter <= 10 (cannot be < 0)
                  pass
 
-        print "SUMMARY"
+        print("SUMMARY")
         make_project_directory(ID)
-        #print master_distance_and_count_summary
+        #print(master_distance_and_count_summary)
 
         pd_columns = ['Name', 'Sample', 'Total', 'Total_indel', '#1-Indel',
                       '#1-Reads(%)', '#2-Indel', '#2-Reads(%)', '#3-Indel',
@@ -348,14 +349,14 @@ def search_fastq(ID, ref_seq, seq_start, seq_end, fastq_files, test_list):
                       '#7-Reads(%)', '#8-Indel', '#8-Reads(%)', 'SNP_test',
                       'raw_wt_counter']
 
-        flip_dict = test_dict.items()   #Need to flip order of items in dictionary.  That way when they are inserted into the excel list, the order will come out correct
+        flip_dict = list(test_dict.items())   #Need to flip order of items in dictionary.  That way when they are inserted into the excel list, the order will come out correct
         flip_dict.reverse()
         flip_dict = OrderedDict(flip_dict)
 
-        for k, v in flip_dict.iteritems():        #Insert the items from test_dict into position 3 for the column output, after 'Total'
+        for k, v in flip_dict.items():        #Insert the items from test_dict into position 3 for the column output, after 'Total'
             pd_columns.insert(3, k)
 
-        for k, v in test_dict.iteritems():        #Insert the % values for test_dic at the end
+        for k, v in test_dict.items():        #Insert the % values for test_dic at the end
             pd_columns.append(str('%'+k))
 
         csv_summary_df = pd.DataFrame.from_records(master_distance_and_count_summary, index='Name', columns=pd_columns)
@@ -365,11 +366,11 @@ def search_fastq(ID, ref_seq, seq_start, seq_end, fastq_files, test_list):
         try:
             csv_summary_df.to_csv(str(save_dir+ID)+'.csv')    #Filename to save csv as
         except (IOError):
-            print 'ERROR.  Script did not execute properly.'
-            print ('The requested .csv file {} is either open or you do not have access to it.  If open, please close file and rerun program').format(str(save_dir+ID)+'.csv')
+            print('ERROR.  Script did not execute properly.')
+            print(('The requested .csv file {} is either open or you do not have access to it.  If open, please close file and rerun program').format(str(save_dir+ID)+'.csv'))
 
         master_Record = sorted(master_Record)
-        print "Total wells with product:", fastq_counter
+        print("Total wells with product:", fastq_counter)
         write_to_file(master_Record, f)
 
     f.close()
