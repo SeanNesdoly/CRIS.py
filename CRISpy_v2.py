@@ -299,8 +299,6 @@ def search_fastq(ID, ref_seq, seq_start, seq_end, fastq_files, test_list):
                     else:
                         pass
 
-            current_fastq_file.close()
-
             try:
                 SNP_test = format(start_counter / end_counter, '.2f')        #Compare counts of seq_start and seq_end for SNP test
             except ZeroDivisionError:
@@ -372,8 +370,6 @@ def search_fastq(ID, ref_seq, seq_start, seq_end, fastq_files, test_list):
         master_Record = sorted(master_Record)
         print("Total wells with product:", fastq_counter)
         write_to_file(master_Record, f)
-
-    f.close()
 
 def main():
     ID = ''
