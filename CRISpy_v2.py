@@ -49,7 +49,10 @@ def get_parameters(target_gene):
         seq_start = 'GGAGTGCAGGAACGA'
         seq_end   = 'CCAAGGCCAACTTCT'
     elif (ID == 'NXF1'):
-        ref_seq   = 'TACTCGGCTAAGCTGCTTCTGGGGGAATAAAAGGAATGGACGTGGTGTTCAGAGCAGTGCTGCCAGCAGGTGTGCCCTGTATCTGCTGGGAAACCCAGTGGTCCCGGGCAGATTCTGGGATGTGATACTAACCGGGCAGGGTTCTGAGGAATGAAAGGAATGCTCAGGGAACAGCAGGCCCCATCATGGTAGGCATCCAGGAGCCCTTGTCGGTCTCCAGAGTCGTAAATTGCATAGTACCTATGGGAAAAACAAAAAAGAAAGTATGGGCTCTGTGGTCTACAGCCATACAAGGACCCAGTAGCTCCCA'
+        # As the reverse complemented sgRNA sequence for NXF1 was found in the
+        # reverse reads (*R2*.fastq.trimmed), the below sequences have been
+        # reverse complemented to match this.
+        ref_seq   = 'TGGGAGCTACTGGGTCCTTGTATGGCTGTAGACCACAGAGCCCATACTTTCTTTTTTGTTTTTCCCATAGGTACTATGCAATTTACGACTCTGGAGACCGACAAGGGCTCCTGGATGCCTACCATGATGGGGCCTGCTGTTCCCTGAGCATTCCTTTCATTCCTCAGAACCCTGCCCGGTTAGTATCACATCCCAGAATCTGCCCGGGACCACTGGGTTTCCCAGCAGATACAGGGCACACCTGCTGGCAGCACTGCTCTGAACACCACGTCCATTCCTTTTATTCCCCCAGAAGCAGCTTAGCCGAGTA'
         seq_start = 'GGGAGCTACTGGGTC'
         seq_end   = 'TCACATCCCAGAATC'
     elif (ID == 'NXT1'):
@@ -61,7 +64,7 @@ def get_parameters(target_gene):
         str('DDX6'), str.upper('ACGTGGTGATTGCTACCCCT'),
         str('SMG9'), str.upper('GCTGAAATGAAGGAACGAGG'),
         str('CARM1'), str.upper('TTCACGGATGAACAGCTCTA'),
-        str('NXF1'), str.upper('TTGTCGGTCTCCAGAGTCGT'),
+        str('NXF1'), str.upper('ACGACTCTGGAGACCGACAA'),  # reverse complement
         str('NXT1'), str.upper('ACTACACCACCATGGATAAG')
     ]
 
@@ -235,7 +238,8 @@ def search_fastq(ID, ref_seq, seq_start, seq_end, fastq_files, test_list):
     file_name = save_dir + 'results_counter_' + ID + '.txt'
     with open(file_name, "w") as f:
         wt_distance = ref_seq.find(seq_end)+len(seq_end) - ref_seq.find(seq_start)      #Expected size of WT read, the distance between the two anchor points made from seq_start and seq_end
-        f.write(ID + '\n')
+        f.write("Starting CRISpy analysis for: " + ID + '\n')
+        print("Starting CRISpy analysis for: " + ID + '\n')
         f.write(str("seq_start: "+seq_start+'\n'))
         f.write(str("seq_end: "+seq_end+'\n'))
         f.write("Test_Sequences (from 'test_list'): \n")
@@ -379,14 +383,14 @@ def main():
     fastq_files = ''
     test_list = []
 
-    print("CRISpy_v2.py \nModified by @SeanNesdoly\nMain program")
+    print("CRISpy_v2.py\nModified by @SeanNesdoly\nMain program")
 
     # @SeanNesdoly: Run CRISpy analysis on each target sgRNA/gene in turn.
     genes = ['DDX6', 'SMG9', 'CARM1', 'NXF1', 'NXT1']
     for g in genes:
         ID, ref_seq, seq_start, seq_end, fastq_files, test_list = get_parameters(g)
         search_fastq(ID, ref_seq, seq_start, seq_end, fastq_files, test_list)
-        print("Completed CRISpy analysis for: " + g)
+        print("Completed CRISpy analysis for: " + g + '\n\n')
 
     print("Done")
 
