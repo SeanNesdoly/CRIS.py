@@ -156,7 +156,7 @@ def make_project_directory(save_dir):
     except:
         os.mkdir(save_dir)
 
-def write_to_file(record_entry,f):
+def write_to_file(record_entry, f):
     #Writes results to the results_counter.txt file. Method of inserting space
     #between each well to make the .txt file easier to read. Based on # of
     #items in well list
@@ -240,12 +240,13 @@ def search_fastq(ID, ref_seq, seq_start, seq_end, fastq_files, test_list):
         wt_distance = ref_seq.find(seq_end)+len(seq_end) - ref_seq.find(seq_start)      #Expected size of WT read, the distance between the two anchor points made from seq_start and seq_end
         f.write("Starting CRISpy analysis for: " + ID + '\n')
         print("Starting CRISpy analysis for: " + ID + '\n')
-        f.write(str("seq_start: "+seq_start+'\n'))
-        f.write(str("seq_end: "+seq_end+'\n'))
-        f.write("Test_Sequences (from 'test_list'): \n")
+        f.write(str("ref_seq: " + ref_seq + "\n"))
+        f.write(str("seq_start: " + seq_start + "\n"))
+        f.write(str("seq_end: " + seq_end + "\n"))
+        f.write("Test sequences (from 'test_list'): \n")
         for key, value in test_dict.items():                #Go through the test_dict and write each item that is being searched for
-            f.write(str(key)+": "+value+'\n')
-            print(key, value)
+            f.write("\t" + str(key) + ": " + value + "\n")
+            print("\t" + key + ": " + value)
             dict_Counters[str(key)]=0
 
         print('Expected WT distance: {}'.format(wt_distance))     #The expected distance between  seq_start and seq_end if the DNA is WT/ REF
@@ -313,22 +314,29 @@ def search_fastq(ID, ref_seq, seq_start, seq_end, fastq_files, test_list):
             except ZeroDivisionError:
                 pass
 
+            # @SeanNesdoly: c_Counter is the number of times that 'seq_start'
+            # && 'seq_end' are both in a read (denoted here as 'control' reads)
             if c_Counter == 0:
                 pass
             elif c_Counter > 10:  #if more than 10 control read counts, record data
                 print("{}: Total_reads:{}, {}".format(fastq_name, str(c_Counter).ljust(2), dict_Counters.items()))
                 fastq_counter += 1
 
-                test_list_string=str(" Testing: ")
+                test_list_string = str("test_list: ")
                 for k,v in dict_Counters.items():
-                    test_list_string=test_list_string+"({}:{}), ".format(k,v)
+                    test_list_string += "({}:{}), ".format(k,v)
+                test_list_string = test_list_string[0:-2] # remove suffix ', '
 
-                temp = Counter(line_list).most_common(12)
                 #summary_line is a list, format:  Miller-Plate13-C01 TOTAL:2072 OrderedDict([('g3', 2010), ('Block_Only', 0), ('Mod_Only', 2), ('Block_Mod', 0), ('Full', 0)])       [(0, 2070), (-1, 2)]
-                summary_line = ([str(fastq_name) + " TOTAL:" + str(c_Counter)+" "+test_list_string+"     "+"Top_reads:"+ str(Counter(indel_size_list).most_common(12))])
+                summary_line = ([str(os.path.basename(fastq_name))  \
+                                 + " TOTAL:" + str(c_Counter) + " " \
+                                 + test_list_string + "\t"          \
+                                 + "Top reads:"                     \
+                                 + str(Counter(indel_size_list).most_common(top_common))])
 
+                temp = Counter(line_list).most_common(top_common)
                 for k,v in temp:          #Append the top found DNA sequences to summary_line
-                    summary_line.append('{} , {}'.format(k,v))
+                    summary_line.append('{:-5}: {}'.format(v, k))
 
                 master_Record.append(summary_line)
                 master_distance_and_count_summary.append(make_counter(indel_size_list,
@@ -368,8 +376,8 @@ def search_fastq(ID, ref_seq, seq_start, seq_end, fastq_files, test_list):
         try:
             csv_summary_df.to_csv(str(save_dir+ID)+'.csv')    #Filename to save csv as
         except (IOError):
-            print('ERROR.  Script did not execute properly.')
-            print(('The requested .csv file {} is either open or you do not have access to it.  If open, please close file and rerun program').format(str(save_dir+ID)+'.csv'))
+            print('ERROR. Script did not execute properly.')
+            print(('The requested .csv file {} is either open or you do not have access to it. If open, please close file and rerun program').format(str(save_dir+ID)+'.csv'))
 
         master_Record = sorted(master_Record)
         print("Total wells with product:", fastq_counter)
