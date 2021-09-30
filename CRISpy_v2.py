@@ -234,18 +234,18 @@ def search_fastq(ID, ref_seq, seq_start, seq_end, fastq_files, test_list):
         + str(ID) \
         + '/'
     make_project_directory(save_dir)
-    print("Working directory: {}".format(str(os.getcwd())))
     print("Output directory: {}".format(save_dir))
 
     file_name = save_dir + 'results_counter_' + ID + '.txt'
     with open(file_name, "w") as f:
         wt_distance = ref_seq.find(seq_end)+len(seq_end) - ref_seq.find(seq_start)      #Expected size of WT read, the distance between the two anchor points made from seq_start and seq_end
         f.write("Starting CRISpy analysis for: " + ID + '\n')
-        print("Starting CRISpy analysis for: " + ID + '\n')
+        print("Starting CRISpy analysis for: " + ID)
         f.write(str("ref_seq: " + ref_seq + "\n"))
         f.write(str("seq_start: " + seq_start + "\n"))
         f.write(str("seq_end: " + seq_end + "\n"))
-        f.write("Test sequences (from 'test_list'): \n")
+        f.write("Test sequences (from 'test_list'):\n")
+        print("Test sequences (from 'test_list'):\n")
         for key, value in test_dict.items():                #Go through the test_dict and write each item that is being searched for
             f.write("\t" + str(key) + ": " + value + "\n")
             print("\t" + key + ": " + value)
@@ -257,7 +257,7 @@ def search_fastq(ID, ref_seq, seq_start, seq_end, fastq_files, test_list):
         else:
             pass
 
-        print("Program Running")
+        print("Program running...")
 
         for each_fastq_file in fastq_files:   #For each clone (really each fastq file in directory), open the file as "clone"
             c_Counter = 0                     #Reset control counter to 0, this counter counts how many times both seq_start and seq_end are found in a line.
@@ -321,9 +321,9 @@ def search_fastq(ID, ref_seq, seq_start, seq_end, fastq_files, test_list):
             if c_Counter == 0:
                 pass
             elif c_Counter > 10:  #if more than 10 control read counts, record data
-                print("{}: Total reads:{}, {}".format(os.path.basename(fastq_name),
-                                                      str(c_Counter).ljust(2),
-                                                      dict_Counters.items()))
+                print("{}: # of reads with both anchors={}, {}".format(os.path.basename(fastq_name),
+                                                                       str(c_Counter).ljust(2),
+                                                                       dict_Counters.items()))
                 fastq_counter += 1
 
                 test_list_string = str("test_list: ")
@@ -352,8 +352,7 @@ def search_fastq(ID, ref_seq, seq_start, seq_end, fastq_files, test_list):
             else: # c_Counter > 0 && c_Counter <= 10 (cannot be < 0)
                  pass
 
-        print("SUMMARY")
-        make_project_directory(ID)
+        #print("SUMMARY")
         #print(master_distance_and_count_summary)
 
         pd_columns = ['Name', 'Sample', 'Total', 'Total_indel', '#1-Indel',
@@ -395,7 +394,7 @@ def main():
     fastq_files = ''
     test_list = []
 
-    print("CRISpy_v2.py\nModified by @SeanNesdoly\nMain program")
+    print("CRISpy_v2.py\nModified by @SeanNesdoly\nMain program\n\n")
 
     # @SeanNesdoly: Run CRISpy analysis on each target sgRNA/gene in turn.
     genes = ['DDX6', 'SMG9', 'CARM1', 'NXF1', 'NXT1']
