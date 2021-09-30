@@ -319,7 +319,9 @@ def search_fastq(ID, ref_seq, seq_start, seq_end, fastq_files, test_list):
             if c_Counter == 0:
                 pass
             elif c_Counter > 10:  #if more than 10 control read counts, record data
-                print("{}: Total_reads:{}, {}".format(fastq_name, str(c_Counter).ljust(2), dict_Counters.items()))
+                print("{}: Total reads:{}, {}".format(os.path.basename(fastq_name),
+                                                      str(c_Counter).ljust(2),
+                                                      dict_Counters.items()))
                 fastq_counter += 1
 
                 test_list_string = str("test_list: ")
@@ -340,7 +342,7 @@ def search_fastq(ID, ref_seq, seq_start, seq_end, fastq_files, test_list):
 
                 master_Record.append(summary_line)
                 master_distance_and_count_summary.append(make_counter(indel_size_list,
-                                                                      str(fastq_name),
+                                                                      str(os.path.basename(fastq_name)),
                                                                       dict_Counters,
                                                                       c_Counter,
                                                                       SNP_test,
