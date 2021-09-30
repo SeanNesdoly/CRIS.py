@@ -28,6 +28,9 @@ import pandas as pd
 # patrickc01/CRIS.py is licensed under the 'GNU General Public License v3.0'.
 # Link to license: https://github.com/patrickc01/CRIS.py/blob/master/LICENSE
 
+# Global variables
+top_common = 12 #Number of top found reads to write to 'results_counter*.txt'
+
 def get_parameters(target_gene):
     # Note to user: change text inside of quote marks ('YOUR DNA SEQUENCES GO
     # HERE') for your experiment. Case of text does not matter.
@@ -173,7 +176,6 @@ def write_to_file(record_entry, f):
             pass
 
 def make_counter(indel_size_list, current_fastq_file, dict_Counters, c_Counter, SNP_test, raw_wt_counter):
-    top_common = 12             #Number of top found reads to write to results_counter .txt file
     temp_counter = Counter(indel_size_list).most_common(top_common)    #Count top indels present in fastq file
     temp_dict = OrderedDict()
 
