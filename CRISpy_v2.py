@@ -78,7 +78,13 @@ def get_parameters(target_gene):
         # Use forward reads for genes 'DDX6', 'SMG9', 'CARM1', & 'NXT1'
         fastq_files = '*R1*.fastq.trimmed'
 
-    # Command-line argument parsing, added by ariva@ufl.edu
+    # Define regex used to search for FASTQ files. We look in the current
+    # working directory or the filepath specified by the '-p' command-line arg.
+    fastq_files = '*.fastq'
+    fastq_path = '' # assigned to value passed in by '-p'
+
+    # Command-line argument parsing, added by ariva@ufl.edu & modified by
+    # @SeanNesdoly
     cmdline_fastqs = []
     args = sys.argv[1:]
     if "-h" in args or "--help" in args:
@@ -100,22 +106,32 @@ def get_parameters(target_gene):
         elif prev in ["-t", "--test"]:
             test_list = read_test_list(a)
             prev = ""
-        elif a in ["-i", "--id", "-r", "--ref", "-s", "--start", "-e", "--end", "-t", "--test"]:
+        elif prev in ["-p", "--fastq-path"]:
+            fastq_path = os.path.expanduser(a)
+            prev = ""
+        elif a in ["-i", "--id", "-r", "--ref", "-s", "--start", "-e",
+                   "--end", "-t", "--test", "-p", "--fastq-path"]:
             prev = a
         else:
             cmdline_fastqs.append(a)
 
-    if cmdline_fastqs:
+    # Get FASTQ file(s) based on command-line arguments
+    if cmdline_fastqs and not fastq_path:
+        # Use files specified on command-line as-is (no globbing)
         fastq_files = cmdline_fastqs
     else:
-        data_dir = os.getenv("HOME") \
-            + '/scratch/210721_MultiKO_CellLineSeqValidation/out/trimmed_reads/06_m50bp/rcFullSeq_rc19bpSuffix_SamplesRemoved/'
-        fastq_files = glob.glob(data_dir + fastq_files)
+        # Try the least restrictive regex '*.fastq'
+        fastq_files = glob.glob(os.path.join(fastq_path, '*.fastq'))
 
-    # End additions
+        # If the FASTQ files were produced by FLASH, only take the merged reads
+        flash_suffix = '*extendedFrags.fastq'
+        if any(flash_suffix in f for f in fastq_files):
+            fastq_files = glob.glob(os.path.join(fastq_path, flash_suffix))
+
     print("Input files:")
     for f in fastq_files:
         print("  " + f)
+
     return ID, ref_seq, seq_start, seq_end, fastq_files, test_list
 
 # Added by ariva@ufl.edu
@@ -133,12 +149,13 @@ column contains the test name, the second column contains the test sequence."""
 def usage():
     sys.stdout.write("""CRIS.py [options] fastqs...
 Where options are (short form followed by long form):
-  -h   | --help    | Display this help message.
-  -i I | --id I    | Set run ID to I.
-  -r R | --ref R   | Set reference sequence to R.
-  -s S | --start S | Set start sequence to S.
-  -e E | --end E   | Set end sequence to E.
-  -t T | --test T  | Read test list from tab-delimited file T.
+  -h   | --help         | Display this help message.
+  -i I | --id I         | Set run ID to I.
+  -r R | --ref R        | Set reference sequence to R.
+  -s S | --start S      | Set start sequence to S.
+  -e E | --end E        | Set end sequence to E.
+  -t T | --test T       | Read test list from tab-delimited file T.
+  -p P | --fastq-path P | Search for FASTQ files at filepath P.
 The tab-delimited file passed as the value of `-t' should have two columns,
 containing the test name and test sequence respectively.
 """)
