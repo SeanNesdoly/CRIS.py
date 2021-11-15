@@ -109,7 +109,6 @@ def get_parameters(target_gene):
                 test_list.append(S[g + '_anchor_start_v0'])
                 test_list.append(g + '_anchor_end_v0')
                 test_list.append(S[g + '_anchor_end_v0'])
-            print(test_list)
         else:
             print("WARNING: 'test_list' assigned twice via the '-t' AND '-q'" \
                   "command-line arguments; defaulting to using the latter.")
@@ -123,9 +122,9 @@ def get_parameters(target_gene):
         fastq_files = glob.glob(os.path.join(fastq_path, '*.fastq'))
 
         # If the FASTQ files were produced by FLASH, only take the merged reads
-        flash_suffix = '*extendedFrags.fastq'
+        flash_suffix = 'extendedFrags.fastq'
         if any(flash_suffix in f for f in fastq_files):
-            fastq_files = glob.glob(os.path.join(fastq_path, flash_suffix))
+            fastq_files = glob.glob(os.path.join(fastq_path, '*' + flash_suffix))
 
     print("Input files:")
     for f in fastq_files:
@@ -313,7 +312,7 @@ def search_fastq(ID, ref_seq, seq_start, seq_end, fastq_files, test_list):
                     # under analysis, instead of arbitrarily using the
                     # first one in 'test_dict'. This will give more accurate
                     # sgRNA-specific counts.
-                    if test_dict[ID] in line:
+                    if test_dict[ID + '_sgRNA'] in line:
                         raw_wt_counter += 1
                     if line.find(seq_start)>0 and line.find(seq_end)>0:
                         c_Counter += 1
@@ -342,7 +341,7 @@ def search_fastq(ID, ref_seq, seq_start, seq_end, fastq_files, test_list):
                 pass
             try:
                 #Calculate raw_wt_counter
-                raw_wt_counter = str(str(raw_wt_counter) +  ' ('+ format((raw_wt_counter/ dict_Counters[ID]), '.1f') +')')
+                raw_wt_counter = str(str(raw_wt_counter) +  ' ('+ format((raw_wt_counter/ dict_Counters[ID + '_sgRNA']), '.1f') +')')
             except ZeroDivisionError:
                 pass
 
@@ -358,7 +357,8 @@ def search_fastq(ID, ref_seq, seq_start, seq_end, fastq_files, test_list):
 
                 test_list_string = str("test_list: ")
                 for k,v in dict_Counters.items():
-                    test_list_string += "({}:{}), ".format(k,v)
+                    if v != 0:
+                        test_list_string += "({}:{}), ".format(k,v)
                 test_list_string = test_list_string[0:-2] # remove suffix ', '
 
                 #summary_line is a list, format:  Miller-Plate13-C01 TOTAL:2072 OrderedDict([('g3', 2010), ('Block_Only', 0), ('Mod_Only', 2), ('Block_Mod', 0), ('Full', 0)])       [(0, 2070), (-1, 2)]
