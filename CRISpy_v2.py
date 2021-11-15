@@ -30,6 +30,7 @@ import pandas as pd
 
 # Global variables
 top_common = 12 #Number of top found reads to write to 'results_counter*.txt'
+GENES = ['DDX6', 'SMG9', 'CARM1', 'NXF1', 'NXT1']
 
 def get_parameters(target_gene):
     # Note to user: change text inside of quote marks ('YOUR DNA SEQUENCES GO
@@ -39,44 +40,14 @@ def get_parameters(target_gene):
     # sgRNA-specifc 'raw_wt_counter' values
     ID = target_gene
 
-    if (ID == 'DDX6'):
-        ref_seq   = 'TCATTAAGCAGCTCAGGACTGTAATATTATAAACCTTTATCCTCTTTGCTCAAATTAAAATTAATGAGAATGTATGTTTTCTAAATCTTGCATAGTGCACGTGGTGATTGCTACCCCTGGGAGAATCCTGGATCTTATTAAGAAAGGAGTAGCAAAGGTTGATCATGTCCAGATGATAGTATTGGATGAGGTAATGTCTCTTCATTTGGCATTATACTGTTCTGTACTTTTCTGTGCTTTGCTTATAACTGCCAGTGAATGAAGCAAAAGCTGCTTGTGTTTATGATCTAATAAACACATAAACAATCAGTTTAAATTAATTTGCTTATAAAATGTGTTTTACCCGTCAGAGGG'
-        seq_start = 'CATTAAGCAGCTCAG'
-        seq_end   = 'ATGAGGTAATGTCTC'
-    elif (ID == 'SMG9'):
-        ref_seq   = 'CAGCTCACAGGGTCACACTTCGGATGCATCCAAGGCTGAGAACCAGAGCTCTCACACACCCCTGCCTGCTCCTCTCCACAGGACTTATGTTTTCCGGGCCCAGAGCGCTGAAATGAAGGAACGAGGGGGCAACCAGACCAGTGGCATCGACTTCTTTATTACCCAAGAACGGATTGTTTTCCTGGACACACAGGTGCCAGCCCCGCCTGCCTTTGCCCCACCCTGCCACATCCTGCATTGAGCCTCTTCCTGGAATGTGATTAAGCCAGAACCCTGCGTGGATTCCATGTGCTTCCAGTCAAGCCAT'
-        seq_start = 'AGCTCACAGGGTCAC'
-        seq_end   = 'ACACACAGGTGCCAG'
-    elif (ID == 'CARM1'):
-        ref_seq   = 'AGGAGTGCAGGAACGAATGGATGACAGGCTGGGAGCACCCAGGGTTGGGGGTCTTGGGGTCCTTTGGAAGCTCTGCCAGGCAGTGTGGGATGTGTCACCTGACGCCAGCACCCCTCCCTGCCCCACTCCCAGGAAACATGTTTCCTACCATTGGTGACGTCCACCTTGCACCCTTCACGGATGAACAGCTCTACATGGAGCAGTTCACCAAGGCCAACTTCTGGTGAGTGTGCCCTGGGTGTCCCGCCTGGGCCCCACAGCCTGCCTTCTCAGGGACAGCCCCAGCTCCCCAGAGAGCCTGCACTCCTCTTTTTCTGAAAGACTTGGGCTAGATGAGGGC'
-        seq_start = 'GGAGTGCAGGAACGA'
-        seq_end   = 'CCAAGGCCAACTTCT'
-    elif (ID == 'NXF1'):
-        # As the reverse complemented sgRNA sequence for NXF1 was found in the
-        # reverse reads (*R2*.fastq.trimmed), the below sequences have been
-        # reverse complemented to match this.
-        ref_seq   = 'TGGGAGCTACTGGGTCCTTGTATGGCTGTAGACCACAGAGCCCATACTTTCTTTTTTGTTTTTCCCATAGGTACTATGCAATTTACGACTCTGGAGACCGACAAGGGCTCCTGGATGCCTACCATGATGGGGCCTGCTGTTCCCTGAGCATTCCTTTCATTCCTCAGAACCCTGCCCGGTTAGTATCACATCCCAGAATCTGCCCGGGACCACTGGGTTTCCCAGCAGATACAGGGCACACCTGCTGGCAGCACTGCTCTGAACACCACGTCCATTCCTTTTATTCCCCCAGAAGCAGCTTAGCCGAGTA'
-        seq_start = 'GGGAGCTACTGGGTC'
-        seq_end   = 'TCACATCCCAGAATC'
-    elif (ID == 'NXT1'):
-        ref_seq   = 'TGTTCCATTGTCAGGGCAGAATGAACTTTGGCATTCACGTGGCTTCTCTTCAACCTTACTTCCCTGCAGCCCCTGGTTCCCCAAGGCAGAGGAAATACCCTGGTGGAGCCCTCCTTCCATAGAACCAGAGATGGCATCTGTGGATTTCAAGACCTATGTGGATCAGGCCTGCAGAGCTGCTGAGGAGTTTGTCAATGTCTACTACACCACCATGGATAAGCGGCGGCGTTTGCTGTCCCGCCTGTACATGGGCACAGCCACCCTGGTCTGGAATGGCAATGCTGTTTCAGGACAAGAATCCTTGAGTGAGTTTTTTGAAATGTTGCCTTCCAGCGAGTTCCAAATCAGCGTGGTAGACTGCCAGCCTGTTCATGATGAAGCCACACCAAGCCAGACCACGGTCCTTGTTGTCATCTGTGGATCAGTGAAGTTTGAGGGGAACAAACAACGGGACTTCAACCAGAACT'
-        seq_start = 'GTTCCATTGTCAGGG'
-        seq_end   = 'CTGGTCTGGAATGGC'
+    # Query sequences used to interrogate FASTQ files to count indels
+    ref_seq   = '' # amplicon sequence for target gene
+    seq_start = '' # upstream anchor sequence
+    seq_end   = '' # downstream anchor sequence
+    test_list = [] # array of sequences to test for, along with their names
 
-    test_list = [
-        str('DDX6'), str.upper('ACGTGGTGATTGCTACCCCT'),
-        str('SMG9'), str.upper('GCTGAAATGAAGGAACGAGG'),
-        str('CARM1'), str.upper('TTCACGGATGAACAGCTCTA'),
-        str('NXF1'), str.upper('ACGACTCTGGAGACCGACAA'),  # reverse complement
-        str('NXT1'), str.upper('ACTACACCACCATGGATAAG')
-    ]
-
-    # Choose R1 or R2 reads for analysis based on target gene (ID)
-    if (ID == 'NXF1'):
-        fastq_files = '*R2*.fastq.trimmed' # use reverse reads
-    else:
-        # Use forward reads for genes 'DDX6', 'SMG9', 'CARM1', & 'NXT1'
-        fastq_files = '*R1*.fastq.trimmed'
+    # Optional: read in query sequences from a FASTA file
+    query_seqs_fasta_file = '' # assigned to value passed in by '-q'
 
     # Define regex used to search for FASTQ files. We look in the current
     # working directory or the filepath specified by the '-p' command-line arg.
@@ -106,14 +77,42 @@ def get_parameters(target_gene):
         elif prev in ["-t", "--test"]:
             test_list = read_test_list(a)
             prev = ""
+        elif prev in ["-q", "--query-seqs"]:
+            query_seqs_fasta_file = os.path.expanduser(a)
+            prev = ""
         elif prev in ["-p", "--fastq-path"]:
             fastq_path = os.path.expanduser(a)
             prev = ""
-        elif a in ["-i", "--id", "-r", "--ref", "-s", "--start", "-e",
-                   "--end", "-t", "--test", "-p", "--fastq-path"]:
+        elif a in ["-i", "--id", "-r", "--ref", "-s", "--start", "-e", "--end",
+                   "-t", "--test", "-q", "--query-seqs", "-p", "--fastq-path"]:
             prev = a
         else:
             cmdline_fastqs.append(a)
+
+    # If specified, parse query sequences from FASTA file; otherwise, rely on
+    # these sequences being hardcoded or passed in via the command-line args
+    if query_seqs_fasta_file:
+        S = read_query_seqs(query_seqs_fasta_file)
+
+        ref_seq   = S[target_gene + '_amplicon']
+        seq_start = S[target_gene + '_anchor_start_v1']
+        seq_end   = S[target_gene + '_anchor_end_v1']
+
+        if not test_list:
+            for g in GENES:
+                # sgRNA sequences for each gene
+                test_list.append(g + '_sgRNA')
+                test_list.append(S[g + '_sgRNA'])
+
+                # Additional anchor sequences, for testing
+                test_list.append(g + '_anchor_start_v0')
+                test_list.append(S[g + '_anchor_start_v0'])
+                test_list.append(g + '_anchor_end_v0')
+                test_list.append(S[g + '_anchor_end_v0'])
+            print(test_list)
+        else:
+            print("WARNING: 'test_list' assigned twice via the '-t' AND '-q'" \
+                  "command-line arguments; defaulting to using the latter.")
 
     # Get FASTQ file(s) based on command-line arguments
     if cmdline_fastqs and not fastq_path:
@@ -133,6 +132,19 @@ def get_parameters(target_gene):
         print("  " + f)
 
     return ID, ref_seq, seq_start, seq_end, fastq_files, test_list
+
+def read_query_seqs(filename):
+    """Read in all query sequences required by CRISpy from a FASTA file.
+    This includes gene-specific amplicon ('ref_seq'), sgRNA (for 'test_list'),
+    and anchor ('seq_start', 'seq_end') sequences.
+    """
+    S = {} # extract (seq_name, seq) pairs from a FASTA file
+    with open(filename, "r") as f:
+        while (seq_name := f.readline().rstrip()):
+            seq = f.readline().rstrip()
+            S[seq_name[1:]] = seq
+
+    return S
 
 # Added by ariva@ufl.edu
 def read_test_list(filename):
@@ -155,6 +167,7 @@ Where options are (short form followed by long form):
   -s S | --start S      | Set start sequence to S.
   -e E | --end E        | Set end sequence to E.
   -t T | --test T       | Read test list from tab-delimited file T.
+  -q Q | --query-seqs Q | Read in query sequences from file Q.
   -p P | --fastq-path P | Search for FASTQ files at filepath P.
 The tab-delimited file passed as the value of `-t' should have two columns,
 containing the test name and test sequence respectively.
@@ -262,7 +275,7 @@ def search_fastq(ID, ref_seq, seq_start, seq_end, fastq_files, test_list):
         f.write(str("seq_start: " + seq_start + "\n"))
         f.write(str("seq_end: " + seq_end + "\n"))
         f.write("Test sequences (from 'test_list'):\n")
-        print("Test sequences (from 'test_list'):\n")
+        print("Test sequences (from 'test_list'):")
         for key, value in test_dict.items():                #Go through the test_dict and write each item that is being searched for
             f.write("\t" + str(key) + ": " + value + "\n")
             print("\t" + key + ": " + value)
@@ -414,9 +427,10 @@ def main():
     print("CRISpy_v2.py\nModified by @SeanNesdoly\nMain program\n\n")
 
     # @SeanNesdoly: Run CRISpy analysis on each target sgRNA/gene in turn.
-    genes = ['DDX6', 'SMG9', 'CARM1', 'NXF1', 'NXT1']
-    for g in genes:
-        ID, ref_seq, seq_start, seq_end, fastq_files, test_list = get_parameters(g)
+    for g in GENES:
+        ID, ref_seq, seq_start, seq_end, fastq_files, test_list = \
+            get_parameters(g)
+
         search_fastq(ID, ref_seq, seq_start, seq_end, fastq_files, test_list)
         print("Completed CRISpy analysis for: " + g + '\n\n')
 
