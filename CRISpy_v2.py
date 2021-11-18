@@ -9,14 +9,17 @@ from collections import Counter
 from collections import OrderedDict
 import pandas as pd
 
-
 # CRIS.py
 #
 # @SeanNesdoly: Version 2 (CRISpy_v2.py) targets Python 2.7; I modified this
 # script to work with Python 3 (based on CRISpy_v1-py3.py).
-
-# Modify parameters below in the get_parameters() section.
-
+#
+# I added the below command-line arguments:
+#    -p, --fastq-path P
+#        Search for FASTQ files at filepath P.
+#    -q, --query-seqs Q
+#        Parse query sequences from FASTA file Q.
+#
 # [2021-09-09] @SeanNesdoly
 # Forked from GitHub repo: https://github.com/patrickc01/CRIS.py
 #
@@ -98,20 +101,15 @@ def get_parameters(target_gene):
         seq_start = S[target_gene + '_anchor_start_v1']
         seq_end   = S[target_gene + '_anchor_end_v1']
 
-        if not test_list:
-            for g in GENES:
-                # sgRNA sequences for each gene
-                test_list.append(g + '_sgRNA')
-                test_list.append(S[g + '_sgRNA'])
-
-                # Additional anchor sequences, for testing
-                test_list.append(g + '_anchor_start_v0')
-                test_list.append(S[g + '_anchor_start_v0'])
-                test_list.append(g + '_anchor_end_v0')
-                test_list.append(S[g + '_anchor_end_v0'])
-        else:
+        if test_list:
+            test_list = [] # reset
             print("WARNING: 'test_list' assigned twice via the '-t' AND '-q'" \
-                  "command-line arguments; defaulting to using the latter.")
+                  " command-line arguments; defaulting to using the latter.")
+
+        # Add all query sequences to 'test_list', for my sanity
+        for k,v in S:
+            test_list.append(k)
+            test_list.append(v)
 
     # Get FASTQ file(s) based on command-line arguments
     if cmdline_fastqs and not fastq_path:
@@ -136,6 +134,9 @@ def read_query_seqs(filename):
     """Read in all query sequences required by CRISpy from a FASTA file.
     This includes gene-specific amplicon ('ref_seq'), sgRNA (for 'test_list'),
     and anchor ('seq_start', 'seq_end') sequences.
+
+    Note that this reproduces the task of gathering input parameters via the
+    command-line arguments -r, -s, -e, and -t.
     """
     S = {} # extract (seq_name, seq) pairs from a FASTA file
     with open(filename, "r") as f:
@@ -307,13 +308,14 @@ def search_fastq(ID, ref_seq, seq_start, seq_end, fastq_files, test_list):
                     #is found in ANY of the lines of the fastq file. This
                     #is a check in case SNPs are in BOTH seq_start and
                     #seq_end
-
+                    #
                     # @SeanNesdoly: use the sequence of the sgRNA currently
                     # under analysis, instead of arbitrarily using the
                     # first one in 'test_dict'. This will give more accurate
                     # sgRNA-specific counts.
                     if test_dict[ID + '_sgRNA'] in line:
                         raw_wt_counter += 1
+
                     if line.find(seq_start)>0 and line.find(seq_end)>0:
                         c_Counter += 1
                         start_counter += 1 #Count # of times seq_start is found
