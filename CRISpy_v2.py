@@ -98,8 +98,8 @@ def get_parameters(target_gene):
         S = read_query_seqs(query_seqs_fasta_file)
 
         ref_seq   = S[target_gene + '_amplicon']
-        seq_start = S[target_gene + '_anchor_start_v1']
-        seq_end   = S[target_gene + '_anchor_end_v1']
+        seq_start = S[target_gene + '_anchor_start']
+        seq_end   = S[target_gene + '_anchor_end']
 
         if test_list:
             test_list = [] # reset
