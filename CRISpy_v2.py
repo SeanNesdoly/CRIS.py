@@ -7,13 +7,24 @@ import sys
 import csv
 from collections import Counter
 from collections import OrderedDict
-import pandas as pd 
+import pandas as pd
 from itertools import izip
 
 
 #CRIS.py
 
 #Modify parameters below in the get_parameters() section.
+
+# [2021-09-09] @SeanNesdoly
+# Forked from GitHub repo: https://github.com/patrickc01/CRIS.py
+#
+# Citation:
+#   Connelly J., Pruett-Miller S. CRIS.py: A Versatile and High-throughput
+#   Analysis Program for CRISPR-based Genome Editing. Scientific Reports 9,
+#   4194 (2019)
+#
+# patrickc01/CRIS.py is licensed under the 'GNU General Public License v3.0'.
+# Link to license: https://github.com/patrickc01/CRIS.py/blob/master/LICENSE
 
 def get_parameters():
     #Note to user- Change text inside of quote marks ('YOUR DNA SEQUENCES GO HERE') for your experiment.  Case of text does not matter.
@@ -23,7 +34,7 @@ def get_parameters():
     seq_end = str.upper('GCCGAGGAGGA')
     fastq_files = '*.fastq'
     test_list = [
-               str('g10'),   str.upper('GAGGCAGGCGTCGAAGAGTACGG'), 
+               str('g10'),   str.upper('GAGGCAGGCGTCGAAGAGTACGG'),
                str('g14'),   str.upper('CGGCCCTGAAGAAGACGGCGGGG'),
                str('g6'),   str.upper('CCGAGGAGTCCGGCCCGGAAGAG'),
                 ]
@@ -115,14 +126,14 @@ def write_to_file(record_entry,f):
             else:
                 pass
         if len(line) > 2:
-            f.write('\n\n') 
+            f.write('\n\n')
         else:
-            pass        
+            pass
 
 def make_counter(indel_size_list, current_fastq_file, dict_Counters, c_Counter, SNP_test, raw_wt_counter):
     top_common = 12             #Number of top found reads to write to results_counter .txt file
     temp_counter = Counter(indel_size_list).most_common(top_common)    #Count top indels present in fastq file
-    temp_dict =OrderedDict()                                           
+    temp_dict =OrderedDict()
     #If there are not a total of at least 'top_common' common reads from the summary file, fill the spaces with NA, NA
     if len(Counter(indel_size_list).most_common(top_common)) <top_common:
             for i in range (0,top_common - len(Counter(indel_size_list).most_common(top_common))):
@@ -158,10 +169,10 @@ def make_counter(indel_size_list, current_fastq_file, dict_Counters, c_Counter, 
 
 def search_fastq(ID,ref_seq,seq_start,seq_end,fastq_files,test_list):
     #Process the fastq file and look for reads
-    test_dict=OrderedDict()                  #Name, Sequence of each item that is being searched for           
+    test_dict=OrderedDict()                  #Name, Sequence of each item that is being searched for
     dict_Counters = OrderedDict()            #Name, Count of each item in the dictionary being searched for (ie current_fastq_file)
     master_distance_and_count_summary =[]
-    save_dir = os.getcwd()+"/"+ str(ID) + "/"   
+    save_dir = os.getcwd()+"/"+ str(ID) + "/"
     fastq_counter = 0               #Count the number of fastq_files with reads
     master_Record = []             #Master list, Master list contains lists
     indel_size_list = []             #list of indel sizes found in the fastq.  For each read, one indel size is recorded
@@ -177,7 +188,7 @@ def search_fastq(ID,ref_seq,seq_start,seq_end,fastq_files,test_list):
     with open(file_name, "w") as f:
         wt_distance = ref_seq.find(seq_end)+len(seq_end) - ref_seq.find(seq_start)      #Expected size of WT read, the distance between the two anchor points made from seq_start and seq_end
         f.write(ID + '\n')
-        f.write(str("seq_start: "+seq_start+'\n'))    
+        f.write(str("seq_start: "+seq_start+'\n'))
         f.write(str("seq_end: "+seq_end+'\n'))
         f.write("Test_Sequences: \n")
         for key, value in test_dict.iteritems():                #Go through the test_dict and write each item that is being searched for
@@ -209,7 +220,7 @@ def search_fastq(ID,ref_seq,seq_start,seq_end,fastq_files,test_list):
                 for line in current_fastq_file:   #For each line in the fastq file
                     if test_dict.items()[0][1] in line:           #Counts the number of times the first item in test_dict is found in ANY of the lines of the fastq file.  This is a check in case SNPs are in BOTH seq_start and seq_end
                         raw_wt_counter+=1
-                    if line.find(seq_start)>0 and line.find(seq_end)>0:  
+                    if line.find(seq_start)>0 and line.find(seq_end)>0:
                         c_Counter += 1
                         start_counter +=1     #Count # of times seq_start is found
                         end_counter +=1       #Count # of times seq_end is found
